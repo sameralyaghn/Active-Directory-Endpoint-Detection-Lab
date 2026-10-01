@@ -45,14 +45,14 @@ This lab reproduces a small enterprise identity and monitoring estate:
 | *Win 10* ² | Domain member workstation — RDP target, Sysmon, Splunk Universal Forwarder | Windows 10 | `10.0.0.137` | 
 | *Ubuntu Server* ² | Splunk indexer — central log collection and search | Ubuntu Server | `10.0.0.140` |
 
-![High-level architecture: AD domain controller, monitored Windows endpoints, Ubuntu Splunk indexer, and Kali adversary host](/Architecture/Architecture.png)
+![High-level architecture: AD domain controller, monitored Windows endpoints, Ubuntu Splunk indexer, and Kali adversary host](/Architecture/Architecture.png)             
 *Figure 1 — Lab architecture: the DC provides identity and DNS, both Windows hosts forward telemetry to the Ubuntu Splunk indexer, and the Kali host acts as the adversary.*
 
 ---
 
 ## 2. Network & Topology
 
-![Machine topology: Windows 10 at 10.0.0.137, Kali at 10.0.0.128, Ubuntu Splunk server at 10.0.0.140, Windows Server 2022 DC at 10.0.0.141](/images/machines.png)
+![Machine topology: Windows 10 at 10.0.0.137, Kali at 10.0.0.128, Ubuntu Splunk server at 10.0.0.140, Windows Server 2022 DC at 10.0.0.141](/images/machines.png)           
 *Figure 2 — Host topology with roles and addressing.*
 
 ### Segmentation & routing
@@ -84,7 +84,7 @@ Static addressing for the Ubuntu indexer was defined in Netplan:
 sudo netplan apply
 ```
 
-![Netplan network configuration on the Ubuntu Splunk server](/images/network_config.png)     
+![Netplan network configuration on the Ubuntu Splunk server](/images/network_config.png)           
 *Figure 3 — Netplan configuration applied to the Ubuntu indexer.*
 
 ### Phase 2 — Domain Controller provisioning
@@ -105,7 +105,7 @@ Install-ADDSForest \
 > [!IMPORTANT]
 > Promotion reboots the server. After the reboot the host is authoritative for DNS and Kerberos authentication in `SAM.LOCAL`.
 
-![AD DS role installation and Domain Controller promotion wizard on Windows Server 2022](/images/DomainController.png)
+![AD DS role installation and Domain Controller promotion wizard on Windows Server 2022](/images/DomainController.png)         
 *Figure 4 — AD DS role installation and DC promotion.*
 
 ### Phase 3 — DNS & client resolution
@@ -120,7 +120,7 @@ Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses 10.0.0.14
 nslookup -type=SRV _ldap._tcp.SAM.LOCAL
 ```
 
-![Setting the domain controller IP as the DNS server on the Windows 10 client](/images/addingDNS.png)  
+![Setting the domain controller IP as the DNS server on the Windows 10 client](/images/addingDNS.png)           
 *Figure 5 — Client DNS repointed at the DC (`10.0.0.141`), resolving the domain-join failure.*
 
 ### Phase 4 — AD schema, OU structuring & identity provisioning
@@ -138,10 +138,10 @@ New-ADUser -Name "john" -GivenName "John" -Path "OU=HR,DC=SAM,DC=LOCAL" `
     -Enabled $true -ChangePasswordAtLogon $true
 ```
 
-![Creating the IT and HR organizational units in Active Directory Users and Computers](/images/adding_org.png)
+![Creating the IT and HR organizational units in Active Directory Users and Computers](/images/adding_org.png)          
 *Figure 6 — IT and HR OUs created under `SAM.LOCAL`.*
 
-![Creating domain user accounts in Active Directory Users and Computers](/images/adding_users.png)
+![Creating domain user accounts in Active Directory Users and Computers](/images/adding_users.png)           
 *Figure 7 — Domain user accounts provisioned into the new OUs.*
 
 ### Phase 5 — Domain join
@@ -153,7 +153,7 @@ With DNS corrected, the workstation joined the domain via **PC → Properties �
 Add-Computer -DomainName "SAM.LOCAL" -Credential (Get-Credential) -Restart
 ```
 
-![Successful domain join confirmation for the Windows 10 workstation](/images/Success.png)   
+![Successful domain join confirmation for the Windows 10 workstation](/images/Success.png)            
 *Figure 8 — Workstation successfully joined to `SAM.LOCAL`.*
 
 ### Phase 6 — Telemetry pipeline: Sysmon + Splunk Universal Forwarder
@@ -191,22 +191,22 @@ source = XmlWinEventLog:Microsoft-Windows-Sysmon/Operational
 > [!NOTE]
 > The Sysmon channel uses `renderXml = true` so structured fields (process GUIDs, command lines, MITRE tags) are indexed for searching; the plain-text channels stay text-parsed.
 
-![Configured event sources forwarded by the Splunk Universal Forwarder](/images/source_events.png)
+![Configured event sources forwarded by the Splunk Universal Forwarder](/images/source_events.png)            
 *Figure 9 — Event sources (Application, Security, Sysmon, System) configured for forwarding.*
 
 ### Phase 7 — Splunk indexer setup & forwarder authentication
 
 An index named **`endpoint`** was created on the Ubuntu Splunk server to receive telemetry from both Windows hosts:
 
-![The endpoint index in Splunk receiving data from the Windows hosts](/images/hosts.png)
+![The endpoint index in Splunk receiving data from the Windows hosts](/images/hosts.png)           
 *Figure 10 — The `endpoint` index with registered Windows sources.*
 
 Forwarder authentication was switched to **local authentication** so forwarding did not depend on Splunk-wide credentials:
 
-![Splunk forwarder local authentication configuration](/images/forwarder_login.png)   
+![Splunk forwarder local authentication configuration](/images/forwarder_login.png)          
 *Figure 11 — Forwarder set to local authentication.*
 
-![Splunk Universal Forwarder Windows services running](/images/Services.png)
+![Splunk Universal Forwarder Windows services running](/images/Services.png)                        
 *Figure 12 — SplunkForwarder services running on both Windows hosts.*
 
 ### Phase 8 — Adversary tooling & attack surface
@@ -218,7 +218,7 @@ sudo apt update && sudo apt upgrade -y
 sudo apt install -y crowbar
 ```
 
-![Crowbar installed and ready on the Kali Linux host](/images/crowbar_kali.png)
+![Crowbar installed and ready on the Kali Linux host](/images/crowbar_kali.png)                    
 *Figure 13 — Crowbar installed on Kali.*
 
 On the Windows 10 endpoint, **RDP was enabled** and three domain users granted remote access:
@@ -232,7 +232,7 @@ Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
 Add-LocalGroupMember -Group "Remote Desktop Users" -Member "SAM\john", "SAM\<user2>", "SAM\<user3>"
 ```
 
-![Adding three domain users to the Remote Desktop Users group on Windows 10](/images/adding_users_RDP.png)    
+![Adding three domain users to the Remote Desktop Users group on Windows 10](/images/adding_users_RDP.png)                    
 *Figure 14 — Three domain users granted RDP access — the exposure later exercised by the attack simulation.*
 
 ---
@@ -307,7 +307,7 @@ From Kali, Hydra was run against the Windows 10 RDP endpoint to obtain the weak 
 hydra -l john -P password.txt 10.0.0.137 rdp
 ```
 
-![Hydra brute-force run against the Windows 10 RDP endpoint from Kali](/images/hydra.png)
+![Hydra brute-force run against the Windows 10 RDP endpoint from Kali](/images/hydra.png)                        
 *Figure 15 — Hydra password attack against `john` over RDP.*
 
 Events were reviewed in Splunk with the filter:
@@ -316,23 +316,23 @@ Events were reviewed in Splunk with the filter:
 index="endpoint" john
 ```
 
-![Splunk search showing the captured authentication events for user john](/images/splunk_detection.png)
+![Splunk search showing the captured authentication events for user john](/images/splunk_detection.png)                
 *Figure 16 — Splunk results for `index="endpoint" john`.*
 
-![Event IDs surfaced in the Splunk search results](/images/Events_ID.png)
+![Event IDs surfaced in the Splunk search results](/images/Events_ID.png)                
 *Figure 17 — Relevant event IDs isolated from the search output.*
 
 The two events of interest were **4625** (failed logon) and **4624** (successful logon):
 
-![Event 4625 failed logon record for the attacked account](/images/4625.png)
+![Event 4625 failed logon record for the attacked account](/images/4625.png)                            
 *Figure 18 — Event 4625: failed logon attempts during the brute-force run.*
 
-![Event 4624 successful logon record for the attacked account](/images/4624.png)
+![Event 4624 successful logon record for the attacked account](/images/4624.png)                        
 *Figure 19 — Event 4624: the successful logon that ended the attack.*
 
 Inspecting the successful logon yielded forensic attribution of the attacker:
 
-![Inspecting the successful logon event for source host and IP details](/images/success_logon.png)
+![Inspecting the successful logon event for source host and IP details](/images/success_logon.png)                        
 *Figure 20 — Source fields of Event 4624 used for attribution.*
 
 | Finding | Value |
@@ -354,25 +354,25 @@ Invoke-AtomicTest T1110 -ShowDetails
 Invoke-AtomicTest T1110 -TestNumbers 1
 ```
 
-![Atomic Red Team installed and executing tests successfully](/images/Atomic.png)
+![Atomic Red Team installed and executing tests successfully](/images/Atomic.png)                        
 *Figure 21 — Atomic Red Team installed and operational.*
 
-![Atomic test execution output confirming expected behavior](/images/Atomic_test.png)
+![Atomic test execution output confirming expected behavior](/images/Atomic_test.png)                        
 *Figure 22 — Atomic test executed successfully against the lab host.*
 
 Atomic tests are catalogued by MITRE technique:
 
-![Tactics, techniques, and procedures view of the executed tests](/images/TTP.png)
+![Tactics, techniques, and procedures view of the executed tests](/images/TTP.png)                    
 *Figure 24 — TTP view of the exercised techniques.*
 
 ### Detection results
 
 Both Windows hosts delivered telemetry to the central indexer, giving a single search surface for authentication and endpoint events:
 
-![Splunk event list showing centralized endpoint telemetry](/images/Splunk_events.png)
+![Splunk event list showing centralized endpoint telemetry](/images/Splunk_events.png)                        
 *Figure 25 — Centralized endpoint events in Splunk.*
 
-![Splunk chart visualization of collected events over time](/images/char_view.png)
+![Splunk chart visualization of collected events over time](/images/char_view.png)                        
 *Figure 26 — Event volume chart — event flow from both endpoints over time.*
 
 ---
