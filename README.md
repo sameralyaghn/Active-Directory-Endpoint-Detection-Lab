@@ -449,4 +449,4 @@ Contributions, detection rules, and feedback are very welcome! If you'd like to 
   - [Splunk Enterprise & Universal Forwarder](https://www.splunk.com/) for centralized log ingestion and search.
   - [Microsoft Sysinternals Sysmon](https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon) & Olaf Hartong's [sysmon-modular](https://github.com/olafhartong/sysmon-modular) configuration profile.
   - [Atomic Red Team](https://www.atomicredteam.io/) by Red Canary, mapped against the [MITRE ATT&CK Framework](https://attack.mitre.org/).
-  - Attack tooling by the open-source security community ([THC-Hydra](https://github.com/VolkanSah/work-with-Hydra) & [Crowbar](https://github.com/galkan/crowbar)).
+  - Attack tooling by the open-source security community ([Hydra](https://github.com/VolkanSah/work-with-Hydra) & [Crowbar](https://github.com/galkan/crowbar)).
